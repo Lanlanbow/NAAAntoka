@@ -5,25 +5,8 @@ Authors@R:
     person(given = "Lanlanbow",
            email = "66890428+Lanlanbow@users.noreply.github.com",
            role = c("aut", "cre"))
-Description: Tools to prepare National Assessment of Academic Ability (NAAA)
-    data. Exports metadata filtered by survey category, years, and keywords
-    with familiar selection helpers and regular expressions to editable
-    text-preserving Excel mapping files, grouping matches by search term and
-    survey year for review. Reads those files
-    directly to name selected columns and locate yearly survey CSV files.
-    Converts UTF-8 and CP932 CSV files into UTF-8 copies with streaming
-    operating-system tools, preserving source files and existing output when
-    conversion fails. Searches variable names and labels from a metadata
-    folder explicitly selected for the R session by keyword
-    while preserving source metadata and unverified definitions. Creates
-    analyst-defined concepts from selected variables and records their years,
-    rationale, and catalog version. Supports long-format metadata with
-    code-label dictionaries and compares choices, including nonresponse
-    codes, without recoding responses. Reads selected
-    UTF-8 CSV columns, combines concept and original-variable selections in
-    the same read, filters Gregorian or Japanese era survey years, and
-    stacks records across years with explicit exclusion reports. The package
-    is being rebuilt one feature at a time.
+Description: 全国学力・学習状況調査を使ったデータ分析をなんとか楽に処理するためのパッケージです。
+    主な機能は、CSVファイルのUTF-8変換、キーワードが含まれる使う変数一覧をxlsxファイルとして出力、分析者が読み込みたい変数一覧表（.xlsx）を作成したら、UTF-8に変換済みのCSVファイルと変数一覧表（.xlsx）から年度間で縦結合したデータを作成します。
 License: MIT + file LICENSE
 URL: https://github.com/Lanlanbow/NAAAntoka
 BugReports: https://github.com/Lanlanbow/NAAAntoka/issues
