@@ -4,16 +4,24 @@
 \alias{make_variable_mapping}
 \title{年度・調査カテゴリ・検索語で対応表の候補をxlsxへ出力する}
 \usage{
-make_variable_mapping(..., output, overwrite = FALSE, sort_by = "keyword")
+make_variable_mapping(
+  調査カテゴリ,
+  年度,
+  変数,
+  output,
+  overwrite = FALSE,
+  sort_by = "keyword"
+)
 }
 \arguments{
-\item{...}{次の3条件を日本語の名前で必ず指定します。
-\code{調査カテゴリ}は\code{"児童"}・\code{"生徒"}・\code{"小学校"}・\code{"中学校"}・
-\code{"児童保護者"}・\code{"生徒保護者"}の6種類から1つを完全一致で指定します。
-\code{年度}は\code{"H24:R6"}のような範囲、または
+\item{調査カテゴリ}{\code{"児童"}・\code{"生徒"}・\code{"小学校"}・\code{"中学校"}・
+\code{"児童保護者"}・\code{"生徒保護者"}の6種類から1つを完全一致で指定します。}
+
+\item{年度}{\code{"H24:R6"}のような範囲、または
 \code{c("H24", "H25", "R6")}のような個別年度を指定します。
-西暦も指定でき、平成・令和をまたぐ範囲や将来の令和年度にも対応します。
-\code{変数}は\code{contains("朝食")}・\code{matches("朝食.*毎日")}などの検索条件、
+西暦も指定でき、平成・令和をまたぐ範囲や将来の令和年度にも対応します。}
+
+\item{変数}{\code{contains("朝食")}・\code{matches("朝食.*毎日")}などの検索条件、
 または1つ以上の検索語を持つ文字列ベクトルです。
 ヘルパーは名前だけでも\code{tidyselect::contains()}などの形式でも指定できます。
 条件による列名の変更や\code{where()}による型指定には対応しません。}

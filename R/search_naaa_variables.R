@@ -1,6 +1,6 @@
 #' キーワードでNAAAの変数を検索する
 #'
-#' [set_naaa_metadata()]で指定したフォルダの`metadata_long.csv`から
+#' [set_naaa_metadata()]で指定したメタデータのxlsxファイルから
 #' 変数名・原ラベル・有効ラベルを検索します。
 #' [make_variable_mapping()]と同じ検索条件を使えます。`contains()`は
 #' 文字どおりの部分一致、`matches()`は正規表現、`starts_with()`と

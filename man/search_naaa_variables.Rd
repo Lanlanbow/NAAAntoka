@@ -22,7 +22,7 @@ search_naaa_variables(keyword)
 同じ列構成の0行の表を返します。
 }
 \description{
-\code{\link[=set_naaa_metadata]{set_naaa_metadata()}}で指定したフォルダの\code{metadata_long.csv}から
+\code{\link[=set_naaa_metadata]{set_naaa_metadata()}}で指定したメタデータのxlsxファイルから
 変数名・原ラベル・有効ラベルを検索します。
 \code{\link[=make_variable_mapping]{make_variable_mapping()}}と同じ検索条件を使えます。\code{contains()}は
 文字どおりの部分一致、\code{matches()}は正規表現、\code{starts_with()}と

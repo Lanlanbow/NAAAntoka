@@ -20,13 +20,12 @@
 #' 入れます。編集後のパスは[read_naaa_data()]の`mapping`へ直接渡せます。
 #' 候補が0件の場合も、元の列名と「西暦」を持つxlsxを出力します。
 #'
-#' @param ... 次の3条件を日本語の名前で必ず指定します。
-#'   `調査カテゴリ`は`"児童"`・`"生徒"`・`"小学校"`・`"中学校"`・
+#' @param 調査カテゴリ `"児童"`・`"生徒"`・`"小学校"`・`"中学校"`・
 #'   `"児童保護者"`・`"生徒保護者"`の6種類から1つを完全一致で指定します。
-#'   `年度`は`"H24:R6"`のような範囲、または
+#' @param 年度 `"H24:R6"`のような範囲、または
 #'   `c("H24", "H25", "R6")`のような個別年度を指定します。
 #'   西暦も指定でき、平成・令和をまたぐ範囲や将来の令和年度にも対応します。
-#'   `変数`は`contains("朝食")`・`matches("朝食.*毎日")`などの検索条件、
+#' @param 変数 `contains("朝食")`・`matches("朝食.*毎日")`などの検索条件、
 #'   または1つ以上の検索語を持つ文字列ベクトルです。
 #'   ヘルパーは名前だけでも`tidyselect::contains()`などの形式でも指定できます。
 #'   条件による列名の変更や`where()`による型指定には対応しません。
@@ -53,19 +52,20 @@
 #' data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 #' }
 make_variable_mapping <- function(
-    ..., output, overwrite = FALSE, sort_by = "keyword"
+    調査カテゴリ, 年度, 変数, output, overwrite = FALSE, sort_by = "keyword"
 ) {
   if (!is.character(sort_by) || length(sort_by) != 1L || is.na(sort_by) ||
       !sort_by %in% c("keyword", "source")) {
     stop("'sort_by' must be 'keyword' or 'source'.", call. = FALSE)
   }
-  filters <- rlang::enquos(..., .ignore_empty = "none")
   expected <- c("\u8abf\u67fb\u30ab\u30c6\u30b4\u30ea", "\u5e74\u5ea6", "\u5909\u6570")
-  if (length(filters) != length(expected) || is.null(names(filters)) ||
-      anyNA(names(filters)) || anyDuplicated(names(filters)) ||
-      !setequal(names(filters), expected)) {
-    stop("Specify exactly the three named filters: ",
-         paste(expected, collapse = ", "), ".", call. = FALSE)
+  filters <- stats::setNames(list(
+    rlang::enquo(調査カテゴリ), rlang::enquo(年度), rlang::enquo(変数)
+  ), expected)
+  missing_filters <- vapply(filters, rlang::quo_is_missing, logical(1L))
+  if (any(missing_filters)) {
+    stop("次の必須引数を指定してください: ",
+         paste(expected[missing_filters], collapse = ", "), call. = FALSE)
   }
   category <- rlang::eval_tidy(filters[[expected[[1L]]]])
   category_choices <- names(.naaa_survey_categories())
@@ -93,7 +93,7 @@ make_variable_mapping <- function(
                       basename(output))
   source <- .naaa_catalog_path()
   .naaa_check_mapping_output(output, source, overwrite)
-  catalog <- .naaa_catalog()
+  catalog <- .naaa_catalog_at(source)
   if (!category %in% unique(catalog[[expected[[1L]]]])) {
     stop("Survey category is not available in the selected metadata: ",
          category, call. = FALSE)

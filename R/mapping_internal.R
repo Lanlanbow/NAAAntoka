@@ -22,7 +22,7 @@
 
 .naaa_check_mapping_output <- function(output, source, overwrite) {
   if (.naaa_same_path(output, source)) {
-    stop("The mapping output must not replace the metadata CSV.", call. = FALSE)
+    stop("The mapping output must not replace the metadata workbook.", call. = FALSE)
   }
   if (dir.exists(output)) {
     stop("The mapping output is an existing directory: ", output, call. = FALSE)
@@ -203,22 +203,27 @@
       stop("The choice comparison contains an unknown metadata variable.",
            call. = FALSE)
     }
-    reports[[length(reports) + 1L]] <- data.frame(
+    choices <- .naaa_catalog_choices(catalog, index)
+    report <- data.frame(
       analysis_name = rep(name, nrow(current)),
       dataset_id = current[["dataset_id"]],
       year_era = current[["year_era"]],
       variable_id = current[["variable_id"]],
       reference_variable_id = rep(current[["variable_id"]][[1L]], nrow(current)),
-      choice_status = .naaa_choice_status(.naaa_catalog_choices(catalog, index)),
+      choice_status = .naaa_choice_status(choices),
       stringsAsFactors = FALSE
     )
+    report[["choices"]] <- choices
+    reports[[length(reports) + 1L]] <- report
   }
   if (!length(reports)) {
-    return(data.frame(
+    result <- data.frame(
       analysis_name = character(), dataset_id = character(), year_era = character(),
       variable_id = character(), reference_variable_id = character(),
       choice_status = .naaa_choice_status(list()), stringsAsFactors = FALSE
-    ))
+    )
+    result[["choices"]] <- list()
+    return(result)
   }
   result <- do.call(rbind, reports)
   rownames(result) <- NULL

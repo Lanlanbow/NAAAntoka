@@ -51,6 +51,9 @@ xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度�
 \code{skipped}は除外年度・変数・理由を持つ\code{data.frame}です。
 \code{mapping}指定時は、分析用変数名、データセット・年度、元変数ID、
 比較基準の元変数ID、選択肢の一致区分を持つ\code{choice_comparison}も返します。
+その\code{choices}列は、各行のコード・値ラベルを文字列の\code{code}・\code{label}列で
+持つ\code{data.frame}のリストです。現在のメタデータを使い、情報がない行には
+0行の表を入れます。
 すべての対象年度が除外された場合はエラーになります。
 }
 \description{
@@ -61,7 +64,8 @@ xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度�
 対応のない年度の項目は\code{NA}とし、表に残っていない年度は読みません。
 \code{years}・\code{year_range}を指定した場合も、対応表に残った年度だけに絞ります。
 選択肢は実際に読み込んだ年度のうち項目ごとの最も古い年度を基準に比較し、
-\code{choice_comparison}で返します。回答値は自動変換しません。
+\code{choice_comparison}で返します。各年度のコードと値ラベルも
+\code{choices}列に含めます。回答値は自動変換しません。
 }
 \details{
 \strong{\code{\link[=create_naaa_concept]{create_naaa_concept()}}} で作成した\code{concepts}と、
@@ -89,6 +93,7 @@ set_naaa_metadata("meta")
 data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 data$data
 data$choice_comparison
+data$choice_comparison$choices[[1]]
 
 files <- c(pupil_2012 = "utf8/H24_児童.csv",
            pupil_2013 = "utf8/H25_児童.csv")

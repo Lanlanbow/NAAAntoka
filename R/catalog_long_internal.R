@@ -1,4 +1,4 @@
-# The long CSV is a metadata dictionary, not respondent data. Keep every code
+# The long workbook is a metadata dictionary, not respondent data. Keep every code
 # name and label literal; in particular, "01" and "1" are different codes.
 .naaa_survey_categories <- function() {
   c(
@@ -87,9 +87,41 @@
 }
 
 .naaa_read_long_catalog <- function(path) {
-  .naaa_assert_utf8_file(path)
-  header <- .naaa_csv_header(path)
-  catalog <- as.data.frame(.naaa_read_csv_columns(path, header),
-                           stringsAsFactors = FALSE)
+  catalog <- tryCatch({
+    sheets <- openxlsx::getSheetNames(path)
+    sheet <- if ("metadata" %in% sheets) "metadata" else if (length(sheets) == 1L) {
+      sheets[[1L]]
+    } else {
+      stop("複数シートがある場合は、メタデータのシート名をmetadataにしてください。")
+    }
+    # Treat headers as ordinary cell text so literal codes such as "01" and
+    # "1", spaces and punctuation are not repaired by the workbook reader.
+    # openxlsx's path reader requires a lowercase extension; its Workbook
+    # reader also accepts workbooks opened from an uppercase .XLSX path.
+    input <- if (grepl("\\.xlsx$", path)) path else {
+      openxlsx::loadWorkbook(path, na.convert = FALSE)
+    }
+    table <- openxlsx::read.xlsx(
+      input, sheet = sheet, colNames = FALSE, check.names = FALSE,
+      detectDates = FALSE, skipEmptyRows = FALSE, skipEmptyCols = FALSE,
+      na.strings = character()
+    )
+    if (!is.data.frame(table) || !nrow(table)) {
+      stop("メタデータのシートには1行目に列名が必要です。")
+    }
+    header <- vapply(table, function(column) as.character(column[[1L]]),
+                     character(1L), USE.NAMES = FALSE)
+    if (anyNA(header) || any(!nzchar(header)) || anyDuplicated(header)) {
+      stop("メタデータの列名に空欄または重複があります。列名を確認してください。")
+    }
+    table <- table[-1L, , drop = FALSE]
+    names(table) <- header
+    for (column in seq_along(table)) table[[column]] <- as.character(table[[column]])
+    rownames(table) <- NULL
+    table
+  }, error = function(e) {
+    stop("メタデータのxlsxファイルを読み込めませんでした: ",
+         conditionMessage(e), call. = FALSE)
+  })
   .naaa_normalize_long_catalog(catalog)
 }

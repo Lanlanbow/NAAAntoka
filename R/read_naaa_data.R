@@ -7,7 +7,8 @@
 #' 対応のない年度の項目は`NA`とし、表に残っていない年度は読みません。
 #' `years`・`year_range`を指定した場合も、対応表に残った年度だけに絞ります。
 #' 選択肢は実際に読み込んだ年度のうち項目ごとの最も古い年度を基準に比較し、
-#' `choice_comparison`で返します。回答値は自動変換しません。
+#' `choice_comparison`で返します。各年度のコードと値ラベルも
+#' `choices`列に含めます。回答値は自動変換しません。
 #'
 #' **[create_naaa_concept()]** で作成した`concepts`と、
 #' `variables`または`variable_id`による元変数の指定を併用できます。
@@ -53,6 +54,9 @@
 #'   `skipped`は除外年度・変数・理由を持つ`data.frame`です。
 #'   `mapping`指定時は、分析用変数名、データセット・年度、元変数ID、
 #'   比較基準の元変数ID、選択肢の一致区分を持つ`choice_comparison`も返します。
+#'   その`choices`列は、各行のコード・値ラベルを文字列の`code`・`label`列で
+#'   持つ`data.frame`のリストです。現在のメタデータを使い、情報がない行には
+#'   0行の表を入れます。
 #'   すべての対象年度が除外された場合はエラーになります。
 #' @export
 #'
@@ -62,6 +66,7 @@
 #' data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 #' data$data
 #' data$choice_comparison
+#' data$choice_comparison$choices[[1]]
 #'
 #' files <- c(pupil_2012 = "utf8/H24_児童.csv",
 #'            pupil_2013 = "utf8/H25_児童.csv")

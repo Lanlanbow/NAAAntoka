@@ -1,10 +1,12 @@
-# The analyst explicitly selects one metadata folder for the current R session.
-# Catalogs and content versions are generated in memory on each metadata read.
+# The analyst explicitly selects a metadata folder or workbook for this session.
+# Keep one validated catalog in memory, keyed by its absolute path and content.
+.naaa_catalog_cache <- new.env(parent = emptyenv())
+
 .naaa_metadata_not_found <- function(path = NULL) {
   message <- paste0(
     "\u30e1\u30bf\u30c7\u30fc\u30bf\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3002 ",
-    "Use set_naaa_metadata(\"meta\") to select the folder containing ",
-    "metadata_long.csv."
+    "set_naaa_metadata(\"meta\")でメタデータのxlsxファイルが入ったフォルダ、",
+    "またはxlsxファイルを指定してください。"
   )
   if (!is.null(path)) message <- paste0(message, "\n", path)
   stop(message, call. = FALSE)
@@ -19,27 +21,49 @@
 
 .naaa_readable_catalog_path <- function(path) {
   if (isTRUE(file.info(path)$isdir) || file.access(path, mode = 4L) != 0L) {
-    stop("The metadata CSV must be a readable file: ", path, call. = FALSE)
+    stop("The metadata workbook must be a readable file: ", path, call. = FALSE)
+  }
+  if (!grepl("\\.xlsx$", path, ignore.case = TRUE)) {
+    stop("メタデータは.xlsxファイルを指定してください: ", path, call. = FALSE)
   }
   normalizePath(path, winslash = "/", mustWork = TRUE)
 }
 
+.naaa_find_metadata_file <- function(directory) {
+  if (file.access(directory, mode = 4L) != 0L ||
+      file.access(directory, mode = 1L) != 0L) {
+    stop("The metadata folder must be readable: ", directory, call. = FALSE)
+  }
+  paths <- list.files(directory, pattern = "\\.xlsx$", full.names = TRUE,
+                       ignore.case = TRUE, all.files = TRUE)
+  paths <- paths[!startsWith(basename(paths), "~$")]
+  info <- file.info(paths)
+  paths <- paths[!is.na(info$isdir) & !info$isdir]
+  if (!length(paths)) .naaa_metadata_not_found(directory)
+  if (length(paths) > 1L) {
+    stop("フォルダ内にxlsxファイルが複数あります。",
+         "set_naaa_metadata(\"meta/ファイル名.xlsx\")で1つを指定してください。",
+         call. = FALSE)
+  }
+  .naaa_readable_catalog_path(paths[[1L]])
+}
+
 .naaa_catalog_path <- function() {
-  directory <- getOption("NAAAntoka.metadata_dir")
-  if (!is.character(directory) || length(directory) != 1L ||
-      is.na(directory) || !nzchar(directory)) {
+  selected <- getOption("NAAAntoka.metadata_dir")
+  if (!is.character(selected) || length(selected) != 1L ||
+      is.na(selected) || !nzchar(selected)) {
     .naaa_metadata_not_found()
   }
-  path <- file.path(directory, "metadata_long.csv")
-  if (!.naaa_catalog_path_present(path)) .naaa_metadata_not_found(path)
-  .naaa_readable_catalog_path(path)
+  if (dir.exists(selected)) return(.naaa_find_metadata_file(selected))
+  if (!.naaa_catalog_path_present(selected)) .naaa_metadata_not_found(selected)
+  .naaa_readable_catalog_path(selected)
 }
 
 .naaa_catalog_file_hash <- function(path) {
   hash <- unname(tools::md5sum(path))
   if (length(hash) != 1L || is.na(hash) ||
       !grepl("^[a-f0-9]{32}$", hash)) {
-    stop("Could not read the metadata CSV for versioning.",
+    stop("Could not read the metadata workbook for versioning.",
          call. = FALSE)
   }
   hash
@@ -50,24 +74,33 @@
 }
 
 .naaa_catalog_at <- function(path) {
+  path <- .naaa_readable_catalog_path(path)
   before <- .naaa_catalog_file_hash(path)
+  cached <- .naaa_catalog_cache$entry
+  if (!is.null(cached) && identical(cached$path, path) &&
+      identical(cached$md5, before)) {
+    return(cached$catalog)
+  }
   catalog <- .naaa_read_long_catalog(path)
   after <- .naaa_catalog_file_hash(path)
   if (!identical(before, after)) {
-    stop("The metadata CSV changed while it was being read; retry ",
+    stop("The metadata workbook changed while it was being read; retry ",
          "after saving the file.", call. = FALSE)
   }
-  attr(catalog, "naaa_catalog_version") <- paste0("csv-", before)
+  attr(catalog, "naaa_catalog_version") <- paste0("xlsx-", before)
   attr(catalog, "naaa_catalog_source") <- list(
     file = basename(path), md5 = before
   )
+  # Publish only a completely read and validated catalog. Errors above never
+  # fall back to an old entry, and switching files retains only the latest one.
+  .naaa_catalog_cache$entry <- list(path = path, md5 = before, catalog = catalog)
   catalog
 }
 
 .naaa_catalog_version <- function(catalog) {
   version <- attr(catalog, "naaa_catalog_version", exact = TRUE)
   # In-memory fixture catalogs can supply their version through the existing
-  # manifest binding. Runtime CSV catalogs always carry their own version.
+  # manifest binding. Runtime workbook catalogs always carry their own version.
   if (is.null(version)) {
     version <- .naaa_catalog_manifest()[["Catalog-Version"]]
   }
@@ -87,15 +120,15 @@
       !nzchar(source$file) || !is.character(source$md5) ||
       length(source$md5) != 1L || is.na(source$md5) ||
       !grepl("^[a-f0-9]{32}$", source$md5) ||
-      !identical(version, paste0("csv-", source$md5))) {
-    stop("The catalog has no valid CSV source information.", call. = FALSE)
+      !identical(version, paste0("xlsx-", source$md5))) {
+    stop("The catalog has no valid workbook source information.", call. = FALSE)
   }
   data.frame(
     "Schema-Version" = "3",
     "Catalog-Version" = version,
     "Catalog-Status" = "provisional",
     "Source-File" = source$file,
-    "Source-Format" = "long-csv",
+    "Source-Format" = "long-xlsx",
     "Source-MD5" = source$md5,
     "Rows" = as.character(nrow(catalog)),
     "Columns" = as.character(ncol(catalog)),
