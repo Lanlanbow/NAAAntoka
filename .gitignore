@@ -1,0 +1,37 @@
+data/
+output/
+*.rds
+*.RData
+*.parquet
+*.[xX][lL][sS][xX]
+.DS_Store
+.Rproj.user
+.Rhistory
+/inst/extdata/catalog/
+/tests/
+/analysis-project/
+/meta/
+/inst/
+
+# === デモ生成物はリポジトリに含めない
+demo/
+
+# === 個人情報・実データの保護（絶対にアップしない）=========================
+# 実際の回答・学校データCSVはどこに置いても無視する。
+*_児童.[cC][sS][vV]
+*_生徒.[cC][sS][vV]
+*_児童保護者.[cC][sS][vV]
+*_生徒保護者.[cC][sS][vV]
+*_保護者.[cC][sS][vV]
+*_小学校.[cC][sS][vV]
+*_中学校.[cC][sS][vV]
+*_学校.[cC][sS][vV]
+
+# 実データの変換先になりがちなフォルダ（プロジェクト直下）
+/raw/
+/utf8/
+/raw_sjis/
+
+# 念のため：大規模な生データ置き場
+/inst/extdata/raw/
+/inst/extdata/utf8/
