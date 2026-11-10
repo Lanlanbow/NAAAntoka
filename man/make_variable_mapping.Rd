@@ -5,23 +5,23 @@
 \title{年度・調査カテゴリ・検索語で対応表の候補をxlsxへ出力する}
 \usage{
 make_variable_mapping(
-  調査カテゴリ,
-  年度,
-  変数,
+  category,
+  years,
+  keyword,
   output,
   overwrite = FALSE,
   sort_by = "keyword"
 )
 }
 \arguments{
-\item{調査カテゴリ}{\code{"児童"}・\code{"生徒"}・\code{"小学校"}・\code{"中学校"}・
+\item{category}{調査カテゴリ。\code{"児童"}・\code{"生徒"}・\code{"小学校"}・\code{"中学校"}・
 \code{"児童保護者"}・\code{"生徒保護者"}の6種類から1つを完全一致で指定します。}
 
-\item{年度}{\code{"H24:R6"}のような範囲、または
+\item{years}{年度。\code{"H24:R6"}のような範囲、または
 \code{c("H24", "H25", "R6")}のような個別年度を指定します。
 西暦も指定でき、平成・令和をまたぐ範囲や将来の令和年度にも対応します。}
 
-\item{変数}{\code{contains("朝食")}・\code{matches("朝食.*毎日")}などの検索条件、
+\item{keyword}{変数の検索条件。\code{contains("朝食")}・\code{matches("朝食.*毎日")}などの条件、
 または1つ以上の検索語を持つ文字列ベクトルです。
 ヘルパーは名前だけでも\code{tidyselect::contains()}などの形式でも指定できます。
 条件による列名の変更や\code{where()}による型指定には対応しません。}
@@ -64,9 +64,9 @@ make_variable_mapping(
 \dontrun{
 set_naaa_metadata("meta")
 make_variable_mapping(
-  調査カテゴリ = "児童",
-  年度 = "H24:R6",
-  変数 = c(contains("朝食"), matches("寝る|起きる"), contains("性別")),
+  category = "児童",
+  years = "H24:R6",
+  keyword = c(contains("朝食"), matches("寝る|起きる"), contains("性別")),
   output = "mapping.xlsx"
 )
 # Excelで不要な行を削除し、「分析用変数名」列を追加して保存します。

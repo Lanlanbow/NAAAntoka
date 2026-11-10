@@ -5,8 +5,8 @@
 .naaa_metadata_not_found <- function(path = NULL) {
   message <- paste0(
     "\u30e1\u30bf\u30c7\u30fc\u30bf\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3002 ",
-    "set_naaa_metadata(\"meta\")でメタデータのxlsxファイルが入ったフォルダ、",
-    "またはxlsxファイルを指定してください。"
+    "set_naaa_metadata(\"meta\")\u3067\u30e1\u30bf\u30c7\u30fc\u30bf\u306exlsx\u30d5\u30a1\u30a4\u30eb\u304c\u5165\u3063\u305f\u30d5\u30a9\u30eb\u30c0\u3001",
+    "\u307e\u305f\u306fxlsx\u30d5\u30a1\u30a4\u30eb\u3092\u6307\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
   )
   if (!is.null(path)) message <- paste0(message, "\n", path)
   stop(message, call. = FALSE)
@@ -24,7 +24,7 @@
     stop("The metadata workbook must be a readable file: ", path, call. = FALSE)
   }
   if (!grepl("\\.xlsx$", path, ignore.case = TRUE)) {
-    stop("メタデータは.xlsxファイルを指定してください: ", path, call. = FALSE)
+    stop("\u30e1\u30bf\u30c7\u30fc\u30bf\u306f.xlsx\u30d5\u30a1\u30a4\u30eb\u3092\u6307\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044: ", path, call. = FALSE)
   }
   normalizePath(path, winslash = "/", mustWork = TRUE)
 }
@@ -41,8 +41,8 @@
   paths <- paths[!is.na(info$isdir) & !info$isdir]
   if (!length(paths)) .naaa_metadata_not_found(directory)
   if (length(paths) > 1L) {
-    stop("フォルダ内にxlsxファイルが複数あります。",
-         "set_naaa_metadata(\"meta/ファイル名.xlsx\")で1つを指定してください。",
+    stop("\u30d5\u30a9\u30eb\u30c0\u5185\u306bxlsx\u30d5\u30a1\u30a4\u30eb\u304c\u8907\u6570\u3042\u308a\u307e\u3059\u3002",
+         "set_naaa_metadata(\"meta/\u30d5\u30a1\u30a4\u30eb\u540d.xlsx\")\u30671\u3064\u3092\u6307\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
          call. = FALSE)
   }
   .naaa_readable_catalog_path(paths[[1L]])

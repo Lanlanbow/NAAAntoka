@@ -20,12 +20,12 @@
 #' 入れます。編集後のパスは[read_naaa_data()]の`mapping`へ直接渡せます。
 #' 候補が0件の場合も、元の列名と「西暦」を持つxlsxを出力します。
 #'
-#' @param 調査カテゴリ `"児童"`・`"生徒"`・`"小学校"`・`"中学校"`・
+#' @param category 調査カテゴリ。`"児童"`・`"生徒"`・`"小学校"`・`"中学校"`・
 #'   `"児童保護者"`・`"生徒保護者"`の6種類から1つを完全一致で指定します。
-#' @param 年度 `"H24:R6"`のような範囲、または
+#' @param years 年度。`"H24:R6"`のような範囲、または
 #'   `c("H24", "H25", "R6")`のような個別年度を指定します。
 #'   西暦も指定でき、平成・令和をまたぐ範囲や将来の令和年度にも対応します。
-#' @param 変数 `contains("朝食")`・`matches("朝食.*毎日")`などの検索条件、
+#' @param keyword 変数の検索条件。`contains("朝食")`・`matches("朝食.*毎日")`などの条件、
 #'   または1つ以上の検索語を持つ文字列ベクトルです。
 #'   ヘルパーは名前だけでも`tidyselect::contains()`などの形式でも指定できます。
 #'   条件による列名の変更や`where()`による型指定には対応しません。
@@ -43,39 +43,40 @@
 #' \dontrun{
 #' set_naaa_metadata("meta")
 #' make_variable_mapping(
-#'   調査カテゴリ = "児童",
-#'   年度 = "H24:R6",
-#'   変数 = c(contains("朝食"), matches("寝る|起きる"), contains("性別")),
+#'   category = "児童",
+#'   years = "H24:R6",
+#'   keyword = c(contains("朝食"), matches("寝る|起きる"), contains("性別")),
 #'   output = "mapping.xlsx"
 #' )
 #' # Excelで不要な行を削除し、「分析用変数名」列を追加して保存します。
 #' data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 #' }
 make_variable_mapping <- function(
-    調査カテゴリ, 年度, 変数, output, overwrite = FALSE, sort_by = "keyword"
+    category, years, keyword, output, overwrite = FALSE, sort_by = "keyword"
 ) {
   if (!is.character(sort_by) || length(sort_by) != 1L || is.na(sort_by) ||
       !sort_by %in% c("keyword", "source")) {
     stop("'sort_by' must be 'keyword' or 'source'.", call. = FALSE)
   }
   expected <- c("\u8abf\u67fb\u30ab\u30c6\u30b4\u30ea", "\u5e74\u5ea6", "\u5909\u6570")
-  filters <- stats::setNames(list(
-    rlang::enquo(調査カテゴリ), rlang::enquo(年度), rlang::enquo(変数)
-  ), expected)
+  filters <- list(
+    category = rlang::enquo(category), years = rlang::enquo(years),
+    keyword = rlang::enquo(keyword)
+  )
   missing_filters <- vapply(filters, rlang::quo_is_missing, logical(1L))
   if (any(missing_filters)) {
-    stop("次の必須引数を指定してください: ",
-         paste(expected[missing_filters], collapse = ", "), call. = FALSE)
+    stop("\u6b21\u306e\u5fc5\u9808\u5f15\u6570\u3092\u6307\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044: ",
+         paste(names(filters)[missing_filters], collapse = ", "), call. = FALSE)
   }
-  category <- rlang::eval_tidy(filters[[expected[[1L]]]])
+  category <- rlang::eval_tidy(filters[["category"]])
   category_choices <- names(.naaa_survey_categories())
   if (!is.character(category) || length(category) != 1L || is.na(category) ||
       !category %in% category_choices) {
-    stop("'", expected[[1L]], "' must exactly match one of: ",
+    stop("'category' must exactly match one of: ",
          paste(category_choices, collapse = ", "), ".",
          call. = FALSE)
   }
-  years <- .naaa_mapping_years(rlang::eval_tidy(filters[[expected[[2L]]]]))
+  years <- .naaa_mapping_years(rlang::eval_tidy(filters[["years"]]))
   .naaa_check_path_argument(output, "output")
   if (!grepl("\\.xlsx$", output, ignore.case = TRUE)) {
     stop("'output' must have the .xlsx extension.", call. = FALSE)
@@ -103,7 +104,7 @@ make_variable_mapping <- function(
   candidates <- which(in_scope)
   by_keyword <- identical(sort_by, "keyword")
   selected <- .naaa_mapping_search(
-    catalog[candidates, , drop = FALSE], filters[[expected[[3L]]]],
+    catalog[candidates, , drop = FALSE], filters[["keyword"]],
     details = by_keyword
   )
   matched <- if (by_keyword) selected$matched else selected

@@ -92,7 +92,7 @@
     sheet <- if ("metadata" %in% sheets) "metadata" else if (length(sheets) == 1L) {
       sheets[[1L]]
     } else {
-      stop("複数シートがある場合は、メタデータのシート名をmetadataにしてください。")
+      stop("\u8907\u6570\u30b7\u30fc\u30c8\u304c\u3042\u308b\u5834\u5408\u306f\u3001\u30e1\u30bf\u30c7\u30fc\u30bf\u306e\u30b7\u30fc\u30c8\u540d\u3092metadata\u306b\u3057\u3066\u304f\u3060\u3055\u3044\u3002")
     }
     # Treat headers as ordinary cell text so literal codes such as "01" and
     # "1", spaces and punctuation are not repaired by the workbook reader.
@@ -107,12 +107,12 @@
       na.strings = character()
     )
     if (!is.data.frame(table) || !nrow(table)) {
-      stop("メタデータのシートには1行目に列名が必要です。")
+      stop("\u30e1\u30bf\u30c7\u30fc\u30bf\u306e\u30b7\u30fc\u30c8\u306b\u306f1\u884c\u76ee\u306b\u5217\u540d\u304c\u5fc5\u8981\u3067\u3059\u3002")
     }
     header <- vapply(table, function(column) as.character(column[[1L]]),
                      character(1L), USE.NAMES = FALSE)
     if (anyNA(header) || any(!nzchar(header)) || anyDuplicated(header)) {
-      stop("メタデータの列名に空欄または重複があります。列名を確認してください。")
+      stop("\u30e1\u30bf\u30c7\u30fc\u30bf\u306e\u5217\u540d\u306b\u7a7a\u6b04\u307e\u305f\u306f\u91cd\u8907\u304c\u3042\u308a\u307e\u3059\u3002\u5217\u540d\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002")
     }
     table <- table[-1L, , drop = FALSE]
     names(table) <- header
@@ -120,7 +120,7 @@
     rownames(table) <- NULL
     table
   }, error = function(e) {
-    stop("メタデータのxlsxファイルを読み込めませんでした: ",
+    stop("\u30e1\u30bf\u30c7\u30fc\u30bf\u306exlsx\u30d5\u30a1\u30a4\u30eb\u3092\u8aad\u307f\u8fbc\u3081\u307e\u305b\u3093\u3067\u3057\u305f: ",
          conditionMessage(e), call. = FALSE)
   })
   .naaa_normalize_long_catalog(catalog)
