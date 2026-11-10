@@ -23,8 +23,7 @@ search_naaa_variables(keyword)
 }
 \description{
 \code{\link[=set_naaa_metadata]{set_naaa_metadata()}}で指定したフォルダの\code{metadata_long.csv}から
-変数名・原ラベル・有効ラベルを検索します。Rのセッションごとに一度、
-メタデータのフォルダを指定してから実行してください。
+変数名・原ラベル・有効ラベルを検索します。
 \code{\link[=make_variable_mapping]{make_variable_mapping()}}と同じ検索条件を使えます。\code{contains()}は
 文字どおりの部分一致、\code{matches()}は正規表現、\code{starts_with()}と
 \code{ends_with()}は前方・後方一致です。各条件は変数名・原ラベル・有効ラベルの
@@ -34,13 +33,8 @@ search_naaa_variables(keyword)
 既定では英字の大文字小文字を区別しません。
 }
 \details{
-文字列や文字列ベクトルを直接渡す場合は、文字どおりの部分一致で検索し、
-複数の検索語はいずれかに一致する行を返します。空白で複数の検索条件に
-分割せず、検索語の前後の空白も検索文字列の一部として扱います。
-
 同じラベルでも、年度やデータセットが異なる変数は別々の行として返します。
-検索結果は使用するCSVの順序を維持します。キーワードの一致によって、変数が
-同じconceptに属すると判定する機能ではありません。
+検索結果は使用するメタデータファイルの順序を維持します。
 }
 \examples{
 \dontrun{

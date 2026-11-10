@@ -2,12 +2,12 @@
 % Please edit documentation in R/convert_utf8.R
 \name{convert_utf8}
 \alias{convert_utf8}
-\title{NAAAのCSVをUTF-8へ変換して別フォルダに保存する}
+\title{NAAAのCSVファイルをUTF-8へ変換して別フォルダに保存する}
 \usage{
 convert_utf8(input, out_dir, os = "auto", overwrite = FALSE)
 }
 \arguments{
-\item{input}{変換する単一CSVのパス。}
+\item{input}{変換するCSVファイルのパス。}
 
 \item{out_dir}{変換後のCSVを保存するフォルダ。入力元とは別のフォルダを
 指定してください。存在しなければ作成します。}
@@ -21,26 +21,13 @@ convert_utf8(input, out_dir, os = "auto", overwrite = FALSE)
 保存したCSVの絶対パスを不可視で返します。
 }
 \description{
-単一のCSVをUTF-8へ変換します。ファイル全体が正しいUTF-8なら
+CSVファイルをUTF-8へ変換します。ファイル全体が正しいUTF-8なら
 内容をそのままコピーし、それ以外はCP932として変換を試みます。
-利用者が入力文字コードを指定する必要はありません。
+対応する文字コードはUTF-8とCP932です。
 }
 \details{
-対応する文字コードはUTF-8とCP932です。その他の文字コードを推測する
-機能ではありません。UTF-16・UTF-32のBOMやNULバイトを含む入力、
-変換できないバイト列では停止します。
-
 macOSでは\code{iconv}、WindowsではPowerShellの.NET機能を使用します。
-必要なコマンドが見つからなければ、既にUTF-8の入力も含めてエラーで
-停止します。自動インストールは行いません。Windowsでは\code{powershell}、
-次に\code{pwsh}の順で利用可能なコマンドを探します。
-入力は変更せず、出力フォルダ内の一時ファイルへ書き込みます。
-変換に成功した場合だけ、元と同じファイル名で出力を確定します。
-変換失敗時は一時ファイルを削除し、既存の出力ファイルを保持します。
-
-BOMは、ファイル先頭に置かれる文字コード識別用の印です。
-CP932からの変換結果は、この印を付けないUTF-8です。
-既にUTF-8の入力は、BOMの有無や改行形式も含めてそのままコピーします。
+必要なコマンドが見つからなければ、エラーで停止します。自動インストールは行いません。
 }
 \examples{
 \dontrun{

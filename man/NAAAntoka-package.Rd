@@ -6,15 +6,7 @@
 \alias{NAAAntoka-package}
 \title{NAAAのデータ準備}
 \description{
-全国学力・学習状況調査のCSVをUTF-8へ変換します。
-\code{\link[=set_naaa_metadata]{set_naaa_metadata()}}で指定したフォルダのメタデータCSVを使い、変数を検索します。
-\code{\link[=make_variable_mapping]{make_variable_mapping()}}で候補をxlsxへ出力し、編集した対応表を
-\code{\link[=read_naaa_data]{read_naaa_data()}}へ直接指定して、必要な列を年度間で縦結合します。
-選んだ変数を分析者独自のconceptとしてまとめ、
-判断理由とメタデータの版を保持し、コードと値ラベルを年度間で比較します。
-選択肢を含むロング型メタデータに対応します。選択したCSV列を年度範囲で絞り、
-年度間で縦結合します。
-その他の機能は、仕様を確認しながら段階的に追加します。
+全国学力・学習状況調査を使ったデータ分析をなんとか楽に処理するためのパッケージです。 主な機能は、CSVファイルのUTF-8変換、キーワードが含まれる使う変数一覧をxlsxファイルとして出力、分析者が読み込みたい変数一覧表（.xlsx）を作成したら、UTF-8に変換済みのCSVファイルと変数一覧表（.xlsx）から年度間で縦結合したデータを作成します。
 }
 \seealso{
 Useful links:

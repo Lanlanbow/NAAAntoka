@@ -22,7 +22,6 @@ metadata_long.csvファイルに対応しています。
 以下の方法でインストールしてください。
 
 ```r
-# 初回のみ
 install.packages("remotes")
 remotes::install_github("Lanlanbow/NAAAntoka")
 

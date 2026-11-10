@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_naaa_data.R
 \name{read_naaa_data}
 \alias{read_naaa_data}
-\title{選んだ変数をCSVから読み込み、年度間で縦結合する}
+\title{選んだ変数をCSVファイルから読み込み、年度間で縦結合する}
 \usage{
 read_naaa_data(
   files = NULL,
@@ -38,7 +38,7 @@ H・Rは大文字小文字を区別しません。省略時は選択変数の年
 \item{on_missing}{\code{"error"}（既定）はCSV・必要列・concept対応の不足で停止。
 \code{"skip_year"}は警告して対象年度全体を除外します。}
 
-\item{data_dir}{UTF-8のCSVが入ったフォルダ。メタデータの年度・カテゴリから
+\item{data_dir}{UTF-8のCSVファイルが入ったフォルダ。メタデータの年度・カテゴリから
 \code{H24_児童.csv}などのファイル名を作ります。\code{files}とは併用できません。}
 
 \item{mapping}{編集したxlsxファイルのパス、または対応表の\code{data.frame}。
@@ -54,9 +54,9 @@ xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度�
 すべての対象年度が除外された場合はエラーになります。
 }
 \description{
-編集したxlsx対応表を\code{mapping}、変換済みCSVのフォルダを\code{data_dir}に
+編集したxlsx対応表を\code{mapping}、UTF-8に変換済みCSVのフォルダを\code{data_dir}に
 指定できます。対応表の「調査カテゴリ」「年度」「変数」を照合し、
-「分析用変数名」を出力列名にします。残した行をすべて読み込みます。
+「分析用変数名」を出力列名にします。編集したxlsx対応表に残した行をすべて読み込みます。
 1表につき1カテゴリ、同じデータセット・分析用変数名につき1変数です。
 対応のない年度の項目は\code{NA}とし、表に残っていない年度は読みません。
 \code{years}・\code{year_range}を指定した場合も、対応表に残った年度だけに絞ります。
@@ -64,7 +64,7 @@ xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度�
 \code{choice_comparison}で返します。回答値は自動変換しません。
 }
 \details{
-UTF-8に変換済みのCSVから必要な列を読み込みます。\code{concepts}と、
+\strong{\code{\link[=create_naaa_concept]{create_naaa_concept()}}} で作成した\code{concepts}と、
 \code{variables}または\code{variable_id}による元変数の指定を併用できます。
 \code{variables}と\code{variable_id}は同時には指定できません。
 concept指定時はconcept ID、直接指定時は元の変数名を出力列名にします。
@@ -82,9 +82,6 @@ concept IDと直接指定した元変数名が重複する場合はエラーに�
 読み込み対象から外して報告します。CSV不足などで年度を除外する場合は、
 同じ年度のすべてのデータセットを除外します。不正なID、曖昧な変数指定、
 不正なCSVやUTF-8では、\code{on_missing}の設定にかかわらず停止します。
-
-メタデータCSVを差し替えると、その内容から計算する版が変わります。
-更新前の版で作成したconceptは、内容を確認してから再作成してください。
 }
 \examples{
 \dontrun{

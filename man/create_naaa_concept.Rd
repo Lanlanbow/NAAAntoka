@@ -29,7 +29,6 @@ create_naaa_concept(name, variable_id, reason = NULL, concept_id = name)
 年度をまたいで同じものとみなすconceptの対応表を作成します。
 \code{name}はconceptの名前、\code{variable_id}はまとめたい元の変数IDです。
 年度は使用するメタデータの\code{year_era}から取得するため、指定は不要です。
-IDの文字列を分解して年度を推測する処理は行いません。
 }
 \details{
 最初に指定した変数を基準に、コードと値ラベルの組全体を比較します。
@@ -41,8 +40,6 @@ IDの文字列を分解して年度を推測する処理は行いません。
 
 変数は指定した順序で保持します。比較は指定した変数間で行い、
 メタデータにあるconcept分類から同一性を自動判定しません。
-メタデータCSVの内容から自動計算した版を記録します。
-作成結果は\code{\link[base:saveRDS]{base::saveRDS()}}で保存し、\code{\link[base:readRDS]{base::readRDS()}}で再利用できます。
 }
 \examples{
 \dontrun{
