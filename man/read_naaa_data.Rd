@@ -50,7 +50,7 @@ xlsxに複数シートがある場合は\code{mapping}シートを読みます�
 
 \item{name_col}{\code{mapping}内で対応キー兼出力列名に使う列名。
 既定の\code{NULL}では\code{concept_id}と\code{concept}を使います。
-例：\code{"自分の変数名"}。従来の対応表は\code{"分析用変数名"}を指定できます。
+例：\code{"自分の変数名"}。
 任意列を指定した場合、\code{concept_id}・\code{concept}は対応付けに使用しません。
 \code{mapping}を指定した場合だけ使用できます。}
 
@@ -129,10 +129,6 @@ data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 data$data
 data$choice_comparison
 data$choice_comparison$choices[[1]]
-# 従来の「分析用変数名」列を使う場合
-data <- read_naaa_data(
-  data_dir = "utf8", mapping = "mapping_edited.xlsx", name_col = "分析用変数名"
-)
 
 files <- c(pupil_2012 = "utf8/H24_児童.csv",
            pupil_2013 = "utf8/H25_児童.csv")

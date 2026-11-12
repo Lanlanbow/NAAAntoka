@@ -11,7 +11,8 @@
 }
 
 .naaa_csv_header <- function(path) {
-  preview <- .naaa_fread(path, nrows = 0L)
+  # Read one data record to limit sampling while retaining CSV header parsing.
+  preview <- .naaa_fread(path, nrows = 1L)
   if (any(grepl('"', names(preview), fixed = TRUE, useBytes = TRUE))) {
     preview <- .naaa_readr_csv(
       path, col_types = readr::cols(.default = readr::col_character()), n_max = 0L
