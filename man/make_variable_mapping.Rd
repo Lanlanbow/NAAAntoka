@@ -55,9 +55,11 @@ make_variable_mapping(
 除外条件だけで選ばれた行など、肯定条件の語に一致しない行は最後にまとめます。
 この並びは候補の比較用であり、質問内容の同一性を判定するものではありません。
 
-出力後、不要な行を削除し、\code{分析用変数名}列を追加してください。
-同じ出力列として年度間で縦結合したい行には、同じ分析用変数名を
-入れます。編集後のパスは\code{\link[=read_naaa_data]{read_naaa_data()}}の\code{mapping}へ直接渡せます。
+出力後、不要な行を削除し、必要に応じて\code{concept_id}・\code{concept}を編集してください。
+同じ出力列として年度間で縦結合したい行には、同じIDと名称を入れます。
+\code{\link[=read_naaa_data]{read_naaa_data()}}は既定でIDを対応キー、名称を出力列名に使います。
+別の列を作成した場合は、同関数の\code{name_col}でその列名を指定できます。
+編集後のパスは\code{mapping}へ直接渡せます。
 候補が0件の場合も、元の列名と「西暦」を持つxlsxを出力します。
 }
 \examples{
@@ -69,7 +71,7 @@ make_variable_mapping(
   keyword = c(contains("朝食"), matches("寝る|起きる"), contains("性別")),
   output = "mapping.xlsx"
 )
-# Excelで不要な行を削除し、「分析用変数名」列を追加して保存します。
+# Excelで不要な行を削除し、必要に応じてconcept_id・conceptを編集して保存します。
 data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 }
 }

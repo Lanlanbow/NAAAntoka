@@ -13,7 +13,9 @@ read_naaa_data(
   year_range = NULL,
   on_missing = "error",
   data_dir = NULL,
-  mapping = NULL
+  mapping = NULL,
+  name_col = NULL,
+  sources = FALSE
 )
 }
 \arguments{
@@ -42,15 +44,34 @@ H・Rは大文字小文字を区別しません。省略時は選択変数の年
 \code{H24_児童.csv}などのファイル名を作ります。\code{files}とは併用できません。}
 
 \item{mapping}{編集したxlsxファイルのパス、または対応表の\code{data.frame}。
-xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度」「変数」
-「分析用変数名」が必要です。他の変数指定方法とは併用できません。}
+xlsxに複数シートがある場合は\code{mapping}シートを読みます。
+「調査カテゴリ」「年度」「変数」と、既定では\code{concept_id}・\code{concept}が必要です。
+他の変数指定方法とは併用できません。}
+
+\item{name_col}{\code{mapping}内で対応キー兼出力列名に使う列名。
+既定の\code{NULL}では\code{concept_id}と\code{concept}を使います。
+例：\code{"自分の変数名"}。従来の対応表は\code{"分析用変数名"}を指定できます。
+任意列を指定した場合、\code{concept_id}・\code{concept}は対応付けに使用しません。
+\code{mapping}を指定した場合だけ使用できます。}
+
+\item{sources}{元CSVの管理表とMD5による照合を有効にするか。
+既定は\code{FALSE}です。\code{TRUE}では元CSVの保存場所・MD5・レコード数を記録します。
+後からMD5を照合して列を追加したい場合は、最初の読み込み時から\code{TRUE}を指定してください。}
 }
 \value{
-\code{data}と\code{skipped}を持つリスト。\code{data}は年度・データセット情報と
-選択列を持つ\code{data.table}です。\code{year_ad}は整数、その他の列は文字列です。
+\code{data}・\code{skipped}を持つリスト。\code{data}は年度・データセット情報と
+選択列を持つ\code{data.table}です。先頭5列は\code{dataset_id}・\code{category_code}・
+\code{year_era}・\code{year_ad}・\code{source_row}です。\code{year_ad}と\code{source_row}は整数、
+その他の列は文字列です。
 \code{skipped}は除外年度・変数・理由を持つ\code{data.frame}です。
-\code{mapping}指定時は、分析用変数名、データセット・年度、元変数ID、
+\code{sources = TRUE}の場合だけ、読み込んだCSVごとの\code{dataset_id}・\code{category_code}・
+\code{year_era}・\code{year_ad}・\code{path}・\code{md5}・\code{n_records}を持つ\code{data.frame}の\code{sources}も返します。
+\code{FALSE}では\code{sources}の項目を省略します（\code{data$sources}は\code{NULL}です）。
+後から列を追加する場合は、このリスト全体を保持してください。
+\code{mapping}指定時は、出力列名を示す\code{analysis_name}、データセット・年度、元変数ID、
 比較基準の元変数ID、選択肢の一致区分を持つ\code{choice_comparison}も返します。
+\code{concept_id}・\code{concept}列は既定の対応付けでは編集済み対応表の値、
+\code{name_col}による任意列指定では\code{NA}です。
 その\code{choices}列は、各行のコード・値ラベルを文字列の\code{code}・\code{label}列で
 持つ\code{data.frame}のリストです。現在のメタデータを使い、情報がない行には
 0行の表を入れます。
@@ -59,8 +80,13 @@ xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度�
 \description{
 編集したxlsx対応表を\code{mapping}、UTF-8に変換済みCSVのフォルダを\code{data_dir}に
 指定できます。対応表の「調査カテゴリ」「年度」「変数」を照合し、
-「分析用変数名」を出力列名にします。編集したxlsx対応表に残した行をすべて読み込みます。
-1表につき1カテゴリ、同じデータセット・分析用変数名につき1変数です。
+既定では編集済み対応表の\code{concept_id}を年度間の対応キー、\code{concept}を出力列名にします。
+\code{name_col}を指定した場合は、その列の値を対応キー兼出力列名にします。
+編集したxlsx対応表に残した行をすべて読み込みます。
+1表につき1カテゴリ、同じデータセット・対応キーにつき1変数です。
+同じIDに異なる名称がある場合や、異なるIDで出力列名が重複する場合は停止します。
+検査は対応表全体に対して行い、問題のある年度・元変数・データ行番号を報告します。
+xlsx入力では、先頭行を列名としてExcel上の行番号も報告します。
 対応のない年度の項目は\code{NA}とし、表に残っていない年度は読みません。
 \code{years}・\code{year_range}を指定した場合も、対応表に残った年度だけに絞ります。
 選択肢は実際に読み込んだ年度のうち項目ごとの最も古い年度を基準に比較し、
@@ -71,7 +97,7 @@ xlsxのシート名は\code{mapping}です。「調査カテゴリ」「年度�
 \strong{\code{\link[=create_naaa_concept]{create_naaa_concept()}}} で作成した\code{concepts}と、
 \code{variables}または\code{variable_id}による元変数の指定を併用できます。
 \code{variables}と\code{variable_id}は同時には指定できません。
-concept指定時はconcept ID、直接指定時は元の変数名を出力列名にします。
+\code{concepts}指定時はconcept ID、直接指定時は元の変数名を出力列名にします。
 同名の元変数を縦に積む場合も、質問内容の同一性は判定しません。
 併用時も同じCSVから必要な列をまとめて取得し、元の行の対応を保持します。
 出力列は年度情報、concept、直接指定した元変数の順です。
@@ -81,6 +107,15 @@ concept IDと直接指定した元変数名が重複する場合はエラーに�
 
 元の値は文字列で読み、先頭0、空文字、文字列\code{NA}、欠損コードを保持します。
 回答値の変換、年度間の個人結合、複数質問の集約は行いません。
+\code{source_row}には各CSVのヘッダーを除くレコード番号を1から付けます。
+CSV内の物理的な行番号とは異なり、引用符内の改行では番号を増やしません。
+\code{dataset_id}との組み合わせで同じ元CSV内の行を識別します。
+\code{source_row}の値は変更したり振り直したりしないでください。
+\code{\link[=add_naaa_variables]{add_naaa_variables()}}で後から列を追加する際にもこの組み合わせを使います。
+既定の\code{sources = FALSE}では元CSVの管理表を作成せず、MD5の計算・照合もしません。
+\code{sources = TRUE}の場合は元CSVのMD5を読み込み前後に確認し、
+読み込み中の変更を検出した場合は停止します。
+この確認には、CSV全体を走査する時間が追加でかかります。
 
 年度は昇順、各CSV内は元の行順を維持します。メタデータにない年度は
 読み込み対象から外して報告します。CSV不足などで年度を除外する場合は、
@@ -94,6 +129,10 @@ data <- read_naaa_data(data_dir = "utf8", mapping = "mapping.xlsx")
 data$data
 data$choice_comparison
 data$choice_comparison$choices[[1]]
+# 従来の「分析用変数名」列を使う場合
+data <- read_naaa_data(
+  data_dir = "utf8", mapping = "mapping_edited.xlsx", name_col = "分析用変数名"
+)
 
 files <- c(pupil_2012 = "utf8/H24_児童.csv",
            pupil_2013 = "utf8/H25_児童.csv")

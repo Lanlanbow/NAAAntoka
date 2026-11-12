@@ -51,7 +51,7 @@
     stop("All selected variables must belong to the same category.",
          call. = FALSE)
   }
-  reserved <- c("dataset_id", "category_code", "year_era", "year_ad")
+  reserved <- c("dataset_id", "category_code", "year_era", "year_ad", "source_row")
   conflicts <- intersect(unique(mapping[["output_name"]]), reserved)
   if (length(conflicts)) {
     stop("Selected output names conflict with reserved metadata columns: ",

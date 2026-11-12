@@ -2,8 +2,13 @@
 #'
 #' 編集したxlsx対応表を`mapping`、UTF-8に変換済みCSVのフォルダを`data_dir`に
 #' 指定できます。対応表の「調査カテゴリ」「年度」「変数」を照合し、
-#' 「分析用変数名」を出力列名にします。編集したxlsx対応表に残した行をすべて読み込みます。
-#' 1表につき1カテゴリ、同じデータセット・分析用変数名につき1変数です。
+#' 既定では編集済み対応表の`concept_id`を年度間の対応キー、`concept`を出力列名にします。
+#' `name_col`を指定した場合は、その列の値を対応キー兼出力列名にします。
+#' 編集したxlsx対応表に残した行をすべて読み込みます。
+#' 1表につき1カテゴリ、同じデータセット・対応キーにつき1変数です。
+#' 同じIDに異なる名称がある場合や、異なるIDで出力列名が重複する場合は停止します。
+#' 検査は対応表全体に対して行い、問題のある年度・元変数・データ行番号を報告します。
+#' xlsx入力では、先頭行を列名としてExcel上の行番号も報告します。
 #' 対応のない年度の項目は`NA`とし、表に残っていない年度は読みません。
 #' `years`・`year_range`を指定した場合も、対応表に残った年度だけに絞ります。
 #' 選択肢は実際に読み込んだ年度のうち項目ごとの最も古い年度を基準に比較し、
@@ -13,7 +18,7 @@
 #' **[create_naaa_concept()]** で作成した`concepts`と、
 #' `variables`または`variable_id`による元変数の指定を併用できます。
 #' `variables`と`variable_id`は同時には指定できません。
-#' concept指定時はconcept ID、直接指定時は元の変数名を出力列名にします。
+#' `concepts`指定時はconcept ID、直接指定時は元の変数名を出力列名にします。
 #' 同名の元変数を縦に積む場合も、質問内容の同一性は判定しません。
 #' 併用時も同じCSVから必要な列をまとめて取得し、元の行の対応を保持します。
 #' 出力列は年度情報、concept、直接指定した元変数の順です。
@@ -23,6 +28,15 @@
 #'
 #' 元の値は文字列で読み、先頭0、空文字、文字列`NA`、欠損コードを保持します。
 #' 回答値の変換、年度間の個人結合、複数質問の集約は行いません。
+#' `source_row`には各CSVのヘッダーを除くレコード番号を1から付けます。
+#' CSV内の物理的な行番号とは異なり、引用符内の改行では番号を増やしません。
+#' `dataset_id`との組み合わせで同じ元CSV内の行を識別します。
+#' `source_row`の値は変更したり振り直したりしないでください。
+#' [add_naaa_variables()]で後から列を追加する際にもこの組み合わせを使います。
+#' 既定の`sources = FALSE`では元CSVの管理表を作成せず、MD5の計算・照合もしません。
+#' `sources = TRUE`の場合は元CSVのMD5を読み込み前後に確認し、
+#' 読み込み中の変更を検出した場合は停止します。
+#' この確認には、CSV全体を走査する時間が追加でかかります。
 #'
 #' 年度は昇順、各CSV内は元の行順を維持します。メタデータにない年度は
 #' 読み込み対象から外して報告します。CSV不足などで年度を除外する場合は、
@@ -46,14 +60,31 @@
 #' @param data_dir UTF-8のCSVファイルが入ったフォルダ。メタデータの年度・カテゴリから
 #'   `H24_児童.csv`などのファイル名を作ります。`files`とは併用できません。
 #' @param mapping 編集したxlsxファイルのパス、または対応表の`data.frame`。
-#'   xlsxのシート名は`mapping`です。「調査カテゴリ」「年度」「変数」
-#'   「分析用変数名」が必要です。他の変数指定方法とは併用できません。
+#'   xlsxに複数シートがある場合は`mapping`シートを読みます。
+#'   「調査カテゴリ」「年度」「変数」と、既定では`concept_id`・`concept`が必要です。
+#'   他の変数指定方法とは併用できません。
+#' @param name_col `mapping`内で対応キー兼出力列名に使う列名。
+#'   既定の`NULL`では`concept_id`と`concept`を使います。
+#'   例：`"自分の変数名"`。従来の対応表は`"分析用変数名"`を指定できます。
+#'   任意列を指定した場合、`concept_id`・`concept`は対応付けに使用しません。
+#'   `mapping`を指定した場合だけ使用できます。
+#' @param sources 元CSVの管理表とMD5による照合を有効にするか。
+#'   既定は`FALSE`です。`TRUE`では元CSVの保存場所・MD5・レコード数を記録します。
+#'   後からMD5を照合して列を追加したい場合は、最初の読み込み時から`TRUE`を指定してください。
 #'
-#' @return `data`と`skipped`を持つリスト。`data`は年度・データセット情報と
-#'   選択列を持つ`data.table`です。`year_ad`は整数、その他の列は文字列です。
+#' @return `data`・`skipped`を持つリスト。`data`は年度・データセット情報と
+#'   選択列を持つ`data.table`です。先頭5列は`dataset_id`・`category_code`・
+#'   `year_era`・`year_ad`・`source_row`です。`year_ad`と`source_row`は整数、
+#'   その他の列は文字列です。
 #'   `skipped`は除外年度・変数・理由を持つ`data.frame`です。
-#'   `mapping`指定時は、分析用変数名、データセット・年度、元変数ID、
+#'   `sources = TRUE`の場合だけ、読み込んだCSVごとの`dataset_id`・`category_code`・
+#'   `year_era`・`year_ad`・`path`・`md5`・`n_records`を持つ`data.frame`の`sources`も返します。
+#'   `FALSE`では`sources`の項目を省略します（`data$sources`は`NULL`です）。
+#'   後から列を追加する場合は、このリスト全体を保持してください。
+#'   `mapping`指定時は、出力列名を示す`analysis_name`、データセット・年度、元変数ID、
 #'   比較基準の元変数ID、選択肢の一致区分を持つ`choice_comparison`も返します。
+#'   `concept_id`・`concept`列は既定の対応付けでは編集済み対応表の値、
+#'   `name_col`による任意列指定では`NA`です。
 #'   その`choices`列は、各行のコード・値ラベルを文字列の`code`・`label`列で
 #'   持つ`data.frame`のリストです。現在のメタデータを使い、情報がない行には
 #'   0行の表を入れます。
@@ -67,6 +98,10 @@
 #' data$data
 #' data$choice_comparison
 #' data$choice_comparison$choices[[1]]
+#' # 従来の「分析用変数名」列を使う場合
+#' data <- read_naaa_data(
+#'   data_dir = "utf8", mapping = "mapping_edited.xlsx", name_col = "分析用変数名"
+#' )
 #'
 #' files <- c(pupil_2012 = "utf8/H24_児童.csv",
 #'            pupil_2013 = "utf8/H25_児童.csv")
@@ -86,11 +121,18 @@ read_naaa_data <- function(
     year_range = NULL,
     on_missing = "error",
     data_dir = NULL,
-    mapping = NULL
+    mapping = NULL,
+    name_col = NULL,
+    sources = FALSE
 ) {
+  .naaa_validate_sources_flag(sources)
   if (!is.character(on_missing) || length(on_missing) != 1L ||
       is.na(on_missing) || !on_missing %in% c("error", "skip_year")) {
     stop("'on_missing' must be 'error' or 'skip_year'.", call. = FALSE)
+  }
+  .naaa_validate_mapping_name_col(name_col)
+  if (!is.null(name_col) && is.null(mapping)) {
+    stop("'name_col'\u306f'mapping'\u3092\u6307\u5b9a\u3057\u305f\u5834\u5408\u3060\u3051\u4f7f\u7528\u3067\u304d\u307e\u3059\u3002", call. = FALSE)
   }
   requested <- .naaa_requested_years(years, year_range)
   catalog <- .naaa_catalog()
@@ -99,7 +141,7 @@ read_naaa_data <- function(
       stop("'mapping' cannot be combined with 'concepts', 'variables', or ",
            "'variable_id'.", call. = FALSE)
     }
-    selection <- .naaa_selection_from_mapping(catalog, mapping)
+    selection <- .naaa_selection_from_mapping(catalog, mapping, name_col = name_col)
   } else {
     selection <- .naaa_resolve_selection(
       catalog, concepts = concepts, variable_id = variable_id, variables = variables
@@ -143,6 +185,7 @@ read_naaa_data <- function(
   }
   .naaa_check_reused_csv_paths(files, unique(active$dataset_id))
   chunks <- list()
+  source_records <- list()
   included_datasets <- character()
   skipped <- .naaa_empty_skipped()
 
@@ -226,18 +269,23 @@ read_naaa_data <- function(
     # Read only after every dataset of this year passes the missing-data checks.
     for (plan in plans) {
       selected <- plan$mapping
-      raw <- .naaa_read_csv_columns(plan$path, unique(selected$variable_name))
+      read <- .naaa_read_csv_with_source(
+        plan$path, unique(selected$variable_name), plan$dataset, sources = sources
+      )
+      raw <- read$data
       n <- nrow(raw)
       dataset <- plan$dataset
       columns <- list(
         dataset_id = rep(dataset$dataset_id[[1L]], n),
         category_code = rep(dataset$category_code[[1L]], n),
         year_era = rep(dataset$year_era[[1L]], n),
-        year_ad = rep(as.integer(year), n)
+        year_ad = rep(as.integer(year), n),
+        source_row = seq_len(n)
       )
       values <- lapply(selected$variable_name, function(name) raw[[name]])
       names(values) <- selected$output_name
       chunks[[length(chunks) + 1L]] <- data.table::as.data.table(c(columns, values))
+      if (sources) source_records[[length(source_records) + 1L]] <- read$source
       included_datasets <- c(included_datasets, dataset$dataset_id[[1L]])
     }
   }
@@ -253,7 +301,7 @@ read_naaa_data <- function(
     }
   }
   data.table::setcolorder(data, c(
-    "dataset_id", "category_code", "year_era", "year_ad",
+    "dataset_id", "category_code", "year_era", "year_ad", "source_row",
     selection$output_names[selection$output_names %in% names(data)]
   ))
   rownames(skipped) <- NULL
@@ -262,6 +310,11 @@ read_naaa_data <- function(
             ". See the returned 'skipped' table for reasons.", call. = FALSE)
   }
   result <- list(data = data, skipped = skipped)
+  if (sources) {
+    source_records <- do.call(rbind, source_records)
+    rownames(source_records) <- NULL
+    result$sources <- source_records
+  }
   if (identical(selection$mode, "mapping")) {
     result$choice_comparison <- .naaa_mapping_choice_comparison(
       catalog, active[active$dataset_id %in% included_datasets, , drop = FALSE]
